@@ -8,13 +8,11 @@
 
 - name: Encryption keys | Get encrypted datasets
   ansible.builtin.set_fact:
-    # zfs_encrypted_datasets: >-
-    #   {{ zfs_filesystems | selectattr('keylocation', 'defined')
-    #   | map('combine', {'dataset_name': '{{ pool }}/{{ name }}'})
-    #   | map(attribute='dataset_name') | list }}
     zfs_encrypted_datasets: >-
-      {{ zfs_filesystems 
-         | map('extract', {'pool': 'pool', 'name': 'name'})
+      {{ zfs_filesystems
+        | selectattr('keylocation', 'defined')
+        | map(attribute='pool') | zip(zfs_filesystems | map(attribute='name'))
+        | map('join', '/') | list
       }}
   when: zfs_create_filesystems
 
