@@ -31,6 +31,8 @@ zfs_debian_package_url: http://archive.zfsonlinux.org/debian/pool/main/z/zfsonli
 zfs_debian_package_version: 6
 zfs_debian_package: "zfsonlinux_{{ zfs_debian_package_version }}_all.deb"
 zfs_enable_auto_snapshots: true
+zfs_kernel_source_directory: '/usr/src/linux-{{ ansible_kernel }}'
+zfs_version: '2.4.1'
 
 # Defines if iscsitarget is installed to server iSCSI volumes
 zfs_enable_iscsi: false

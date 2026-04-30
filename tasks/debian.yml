@@ -32,19 +32,40 @@
         debian_release: '{{ default_debian_distribution + "-backports" }}'
   when: debian_use_backports
 
+- name: Debian | Check for kernel source
+  ansible.builtin.stat:
+    path: '{{ zfs_kernel_source_directory }}'
+  register: zfs_have_linux_source
+
+- name: Debian | Install linux headers
+  ansible.builtin.apt:
+    name:
+      - 'linux-headers-{{ ansible_kernel }}'
+  when: 'not zfs_have_linux_source.stat.exists'
+
 - name: Debian | Install ZFS
   ansible.builtin.apt:
     name:
-      - linux-headers-{{ ansible_kernel }}
       - zfsutils-linux
       - zfs-dkms
     state: present
     default_release: "{{ debian_release }}"
 
-- name: Debian | Enable ZFS module
-  community.general.modprobe:
-    name: zfs
-    state: present
+- name: Enable or build ZFS module
+  block:
+    - name: Debian | Enable ZFS module
+      community.general.modprobe:
+        name: zfs
+        state: present
+  rescue:
+    - name: Debian | Build and install ZFS module
+      ansible.builtin.command:
+        cmd: 'dkms install -k {{ ansible_kernel }} zfs/{{ zfs_version }}'
+      
+    - name: Debian | Retry enable ZFS module
+      community.general.modprobe:
+        name: zfs
+        state: present
 
 - name: Debian | Install open-iscsi (if enabled)
   ansible.builtin.apt:
